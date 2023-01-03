@@ -14,7 +14,7 @@ const campgroundSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'Review'
         }
-    ]   
+    ] 
 });
 
 campgroundSchema.post('findOneAndDelete', async function (doc) {
