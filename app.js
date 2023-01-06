@@ -1,3 +1,7 @@
+if(process.env.NODE_ENV != "production") {
+    require('dotenv').config();
+}
+
 const ejsMate        = require('ejs-mate');
 const express        = require('express');
 const flash          = require('connect-flash');
@@ -11,10 +15,10 @@ const LocalStrategy  = require('passport-local');
 const ExpressError   = require('./utils/ExpressError');
 
 const campgroundsRoutes = require('./routes/campgrounds');
-const reviewsRoutes        = require('./routes/reviews');
-const usersRoutes           = require('./routes/users');
+const reviewsRoutes     = require('./routes/reviews');
+const usersRoutes       = require('./routes/users');
 
-const User           = require('./models/user');
+const User = require('./models/user');
 
 mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp', {
     useNewUrlParser: true,
@@ -79,12 +83,6 @@ app.use((req, res, next) => {
 app.use('/campgrounds', campgroundsRoutes);
 app.use('/campgrounds/:id/reviews', reviewsRoutes);
 app.use('/', usersRoutes);
-
-app.get('/fakeuser', async (req, res) => {
-    const user = new User({ email: 'thiago@gmail.com', username: 'thiago'});
-    const newUser = await User.register(user, 'password');
-    res.send(newUser);
-});
 
 app.get('/', (req, res) => {
     res.render('home');
