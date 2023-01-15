@@ -1,12 +1,14 @@
-if(process.env.NODE_ENV != "production") {
+if(process.env.NODE_ENV !== "production") {
     require('dotenv').config();
 }
 
 const ejsMate        = require('ejs-mate');
 const express        = require('express');
 const flash          = require('connect-flash');
+const helmet         = require("helmet");
 const methodOverride = require('method-override');
 const mongoose       = require('mongoose');
+const mongoSanitize  = require('express-mongo-sanitize');
 const path           = require('path');
 const session        = require('express-session');
 const passport       = require('passport') 
@@ -42,22 +44,84 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(mongoSanitize({
+    replaceWith: '_'
+}));
 const sessionConfig = {
+    name: 'session',
     secret: 'password',
     resave: false,
     saveUninitialized: true,
     cookie: {
         httpOnly: true,
+        // secure: true,
         expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
         maxAge: 1000 * 60 * 60 * 24 * 7 
     }
 }
 app.use(session(sessionConfig));
 app.use(flash());
-app.use(passport.initialize());
-app.use(passport.session());
+app.use(helmet());
+
+const scriptSrcUrls = [
+    "'self'",
+    "'unsafe-inline'",
+    "'unsafe-eval'",
+    "https://stackpath.bootstrapcdn.com/",
+    'https://api.tiles.mapbox.com/',
+    'https://api.mapbox.com/',
+    "https://kit.fontawesome.com/",
+    "https://cdnjs.cloudflare.com/",
+    "https://cdn.jsdelivr.net/",
+    "https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.css/",
+    "https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.js/"
+];
+
+const styleSrcUrls = [
+    "'self'",
+    "https://cdn.jsdelivr.net/",
+    "https://kit-free.fontawesome.com/",
+    "https://stackpath.bootstrapcdn.com/",
+    "https://api.mapbox.com/",
+    "https://api.tiles.mapbox.com/",
+    "https://fonts.googleapis.com/",
+    "https://use.fontawesome.com/",
+];
+
+const connectSrcUrls = [
+    "https://api.mapbox.com/",
+    "https://a.tiles.mapbox.com/",
+    "https://b.tiles.mapbox.com/",
+    "https://events.mapbox.com/",
+];
+
+app.use(
+    helmet.contentSecurityPolicy({
+      directives: {
+        defaultSrc: ["'self'"],
+        connectSrc: connectSrcUrls,
+        scriptSrc: scriptSrcUrls,
+        styleSrc: styleSrcUrls,
+        workerSrc: ["'self'", "blob:"],
+        objectSrc: ["'none'"],
+        imgSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            "blob:",
+            "data:",
+            "https://res.cloudinary.com/dg2iz0zbi/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT! 
+            "https://images.unsplash.com/",
+        ],
+        upgradeInsecureRequests: [],
+      },
+    })
+  );
+  
 
 // use static authenticate method of model in LocalStrategy
+app.use(passport.initialize());
+app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
 
 // use static serialize and deserialize of model for passport session support

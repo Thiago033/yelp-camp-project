@@ -1,9 +1,8 @@
 <% layout('layouts/boilerplate') %>
 
-<link rel="stylesheet" href="/styles/stars.css">
-
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.12.0/mapbox-gl.js"></script>
+<link rel="stylesheet" href="/styles/stars.css">
 
 <div class="row">
     <div class="col-6">
@@ -11,7 +10,7 @@
             <div class="carousel-inner">
             <% campground.images.forEach((image, index) => { %>
             <div class="carousel-item <%= index === 0 ? 'active' : '' %> ">
-                <img src="<%= image.url %>" class="d-block w-100" alt="">
+                <img src="<%= image.url %>" class="d-block w-100" alt="" crossorigin="anonymous">
             </div>
             <% }) %>
             </div>

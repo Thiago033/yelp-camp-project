@@ -1,4 +1,5 @@
 mapboxgl.accessToken = mapToken;
+
 const map = new mapboxgl.Map({
     container: 'cluster-map',
     // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
