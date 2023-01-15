@@ -9,6 +9,7 @@ const helmet         = require("helmet");
 const methodOverride = require('method-override');
 const mongoose       = require('mongoose');
 const mongoSanitize  = require('express-mongo-sanitize');
+const MongoStore     = require('connect-mongo');
 const path           = require('path');
 const session        = require('express-session');
 const passport       = require('passport') 
@@ -22,7 +23,9 @@ const usersRoutes       = require('./routes/users');
 
 const User = require('./models/user');
 
-mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp', {
+const dbUrl = process.env.DB_URL || 'mongodb://127.0.0.1:27017/yelp-camp';
+
+mongoose.connect(dbUrl, {
     useNewUrlParser: true,
     //useCreateIndex: true,
     useUnifiedTopology: true,
@@ -47,9 +50,24 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(mongoSanitize({
     replaceWith: '_'
 }));
+
+const secret = process.env.SECRET || 'password';
+
+const store = MongoStore.create({
+    mongoUrl: dbUrl,
+    secret: secret,
+    touchAfter: 24 * 60 * 60,
+    collection: "sessions"
+});
+
+store.on("error", function(e) {
+    console.log("SESSION STORE ERROR", e);
+});
+
 const sessionConfig = {
+    store,
     name: 'session',
-    secret: 'password',
+    secret: secret,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -162,6 +180,8 @@ app.use((err, req, res, next) => {
     res.status(statusCode).render('error', {err});
 });
 
-app.listen(3000, () => {
-    console.log('Serving on port 3000');
+const port = process.env.PORT || 3000
+
+app.listen(port, () => {
+    console.log(`Serving on port ${port}`);
 });
